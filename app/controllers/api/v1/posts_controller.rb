@@ -3,9 +3,15 @@
 module Api
   module V1
     class PostsController < ApplicationController
+      include Authenticatable
+      include PaginationLinksConcern
+
       def index
-        posts = Post.all
-        render json: posts.paginate(page: params[:page], per_page: 10)
+        posts = Post.paginate(page: params[:page], per_page: params[:per_page])
+        render json: {
+          posts:,
+          pagination: pagination_links(posts)
+        }
       end
 
       def show
