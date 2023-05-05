@@ -20,6 +20,20 @@ RSpec.describe Post, type: :model do
     end
   end
 
+  describe 'association with comments' do
+    let!(:post) { create(:post) }
+    let!(:comment) { create(:comment, post:) }
+
+    it 'has many comments' do
+      expect(post.comments).to eq([comment])
+    end
+
+    it 'adds comment to post' do
+      expect(post.comments.count).to eq(1)
+      expect(post.comments.first).to eq(comment)
+    end
+  end
+
   describe 'CRUD operations' do
     it 'can be created' do
       post = Post.new(valid_attributes)
