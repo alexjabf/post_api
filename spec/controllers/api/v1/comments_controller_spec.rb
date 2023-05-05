@@ -14,7 +14,7 @@ RSpec.describe Api::V1::CommentsController, type: :controller do
       end
 
       it 'returns the first page of comments by default' do
-        expect(JSON.parse(response.body)['comments'].size).to eq(20)
+        expect(JSON.parse(response.body)['data'].size).to eq(20)
       end
     end
 
@@ -26,13 +26,12 @@ RSpec.describe Api::V1::CommentsController, type: :controller do
       end
 
       it 'returns the requested page of comments' do
-        expect(JSON.parse(response.body)['comments'].size).to eq(10)
+        expect(JSON.parse(response.body)['data'].size).to eq(10)
       end
 
       it 'returns comments in the correct order' do
         expected_order = Comment.order(created_at: :asc).offset(10).limit(10).pluck(:id)
-        actual_order = JSON.parse(response.body)['comments'].map { |comment| comment['id'] }
-        expect(actual_order).to eq(expected_order)
+        expect(JSON.parse(response.body)['data'].pluck('id').map(&:to_i)).to eq(expected_order)
       end
     end
   end
@@ -47,7 +46,7 @@ RSpec.describe Api::V1::CommentsController, type: :controller do
 
     it 'returns the requested comment' do
       get :show, params: { id: comment.id }, format: :json
-      expect(JSON.parse(response.body)['comment']['id']).to eq(comment.id)
+      expect(JSON.parse(response.body)['data']['id'].to_i).to eq(comment.id)
     end
   end
 
@@ -68,7 +67,7 @@ RSpec.describe Api::V1::CommentsController, type: :controller do
       it 'returns a success response with the created comment' do
         post :create, params: { comment: valid_attributes }, format: :json
         expect(response).to have_http_status(:created)
-        expect(JSON.parse(response.body)['comment']['id']).not_to be_nil
+        expect(JSON.parse(response.body)['data']['id'].to_i).not_to be_nil
       end
     end
 
@@ -116,7 +115,7 @@ RSpec.describe Api::V1::CommentsController, type: :controller do
       it 'returns a success response with the updated comment' do
         put :update, params: { id: comment.id, comment: new_attributes }, format: :json
         expect(response).to be_successful
-        expect(JSON.parse(response.body)['comment']['id']).to eq(comment.id)
+        expect(JSON.parse(response.body)['data']['id'].to_i).to eq(comment.id)
       end
     end
 

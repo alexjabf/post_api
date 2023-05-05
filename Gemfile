@@ -65,6 +65,7 @@ end
 
 group :development do
   # Speed up commands on slow machines / big apps [https://github.com/rails/spring]
+  gem 'annotate' # Annotate Rails classes with schema and routes info
   gem 'spring' # Speed up commands on slow machines / big apps
   gem 'web-console' # Interactive console for development
 end
@@ -72,3 +73,5 @@ end
 gem 'rack-cors' # Cross-Origin Resource Sharing (CORS)
 
 gem 'will_paginate', '~> 3.3' # Pagination library
+
+gem 'jsonapi-serializer' # JSON:API serializer

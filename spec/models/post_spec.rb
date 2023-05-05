@@ -1,5 +1,16 @@
 # frozen_string_literal: true
 
+# == Schema Information
+#
+# Table name: posts
+#
+#  id             :bigint           not null, primary key
+#  author         :string(50)       not null
+#  content        :string(500)      not null
+#  created_at     :datetime         not null
+#  updated_at     :datetime         not null
+#  comments_count :integer          default(0), not null
+#
 require 'rails_helper'
 
 RSpec.describe Post, type: :model do
@@ -58,6 +69,8 @@ RSpec.describe Post, type: :model do
     let!(:post) { create(:post) }
     let!(:comment) { create(:comment, post:) }
 
+    it { should have_many(:comments).dependent(:destroy).conditions(parent_comment_id: nil) }
+
     it 'has many comments' do
       expect(post.comments).to eq([comment])
     end
@@ -65,6 +78,21 @@ RSpec.describe Post, type: :model do
     it 'adds comment to post' do
       expect(post.comments.count).to eq(1)
       expect(post.comments.first).to eq(comment)
+    end
+  end
+
+  describe 'post_comments' do
+    let!(:post1) { create(:post) }
+    let!(:post2) { create(:post) }
+    let!(:comment1) { create(:comment, post: post1) }
+    let!(:comment2) { create(:comment, post: post1) }
+    let!(:comment3) { create(:comment, post: post2) }
+    let!(:reply1) { create(:comment, parent_comment: comment1, post: post1) }
+    let!(:reply2) { create(:comment, parent_comment: comment2, post: post1) }
+    it 'returns all the post comments without replies' do
+      expect(Post.post_comments).to match_array([post1, post2])
+      expect(post1.comments).to match_array([comment1, comment2])
+      expect(post2.comments).to match_array([comment3])
     end
   end
 
