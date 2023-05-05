@@ -14,6 +14,40 @@ RSpec.describe Post, type: :model do
     it { should validate_length_of(:content).is_at_most(500) }
   end
 
+  describe 'accepts_nested_attributes_for :comments' do
+    let(:post) { create(:post) }
+
+    it 'should create a new comment when valid nested attributes are provided' do
+      expect do
+        post.update(comments_attributes: [{ author: 'Alex Fierro', content: 'My first comment' }])
+      end.to change { Comment.count }.by(1)
+    end
+
+    it 'should update an existing comment when valid nested attributes are provided' do
+      comment = create(:comment, post:, author: 'Alex Fierro', content: 'My second comment')
+
+      post.update(comments_attributes: [{ id: comment.id, author: 'Javier Fierro', content: 'Updated comment' }])
+
+      comment.reload
+      expect(comment.author).to eq('Javier Fierro')
+      expect(comment.content).to eq('Updated comment')
+    end
+
+    it 'should delete a comment when the _destroy flag is set to true' do
+      comment = create(:comment, post:)
+
+      expect do
+        post.update(comments_attributes: [{ id: comment.id, _destroy: true }])
+      end.to change { Comment.count }.by(-1)
+    end
+
+    it 'should not create a new comment when invalid nested attributes are provided' do
+      expect do
+        post.update(comments_attributes: [{ author: nil, content: nil }])
+      end.not_to(change { Comment.count })
+    end
+  end
+
   describe 'read all records' do
     it 'returns all records' do
       expect(Post.all).to match_array(posts)
@@ -47,14 +81,38 @@ RSpec.describe Post, type: :model do
 
     it 'can be updated' do
       post = Post.create(valid_attributes)
-      post.update(author: 'Jane Doe')
-      expect(Post.find(post.id).author).to eq('Jane Doe')
+      post.update(author: 'Javier Fierro')
+      expect(Post.find(post.id).author).to eq('Javier Fierro')
     end
 
     it 'can be deleted' do
       post = Post.create(valid_attributes)
       post.destroy
       expect(Post.find_by(id: post.id)).to be_nil
+    end
+  end
+
+  describe '#increment_comments_count!' do
+    let(:post) { create(:post) }
+
+    it 'should increment the comments_count attribute by 1' do
+      expect { post.increment_comments_count! }.to change { post.comments_count }.by(1)
+    end
+
+    it 'should update the comments_count attribute in the database' do
+      expect { post.increment_comments_count! }.to change { post.reload.comments_count }.by(1)
+    end
+  end
+
+  describe '#decrement_comments_count!' do
+    let(:post) { create(:post, comments_count: 3) }
+
+    it 'should decrement the comments_count attribute by 1' do
+      expect { post.decrement_comments_count! }.to change { post.comments_count }.by(-1)
+    end
+
+    it 'should update the comments_count attribute in the database' do
+      expect { post.decrement_comments_count! }.to change { post.reload.comments_count }.by(-1)
     end
   end
 end

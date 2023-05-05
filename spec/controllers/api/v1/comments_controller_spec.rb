@@ -68,7 +68,7 @@ RSpec.describe Api::V1::CommentsController, type: :controller do
       it 'returns a success response with the created comment' do
         post :create, params: { comment: valid_attributes }, format: :json
         expect(response).to have_http_status(:created)
-        expect(JSON.parse(response.body)['id']).not_to be_nil
+        expect(JSON.parse(response.body)['comment']['id']).not_to be_nil
       end
     end
 
@@ -116,7 +116,7 @@ RSpec.describe Api::V1::CommentsController, type: :controller do
       it 'returns a success response with the updated comment' do
         put :update, params: { id: comment.id, comment: new_attributes }, format: :json
         expect(response).to be_successful
-        expect(JSON.parse(response.body)['id']).to eq(comment.id)
+        expect(JSON.parse(response.body)['comment']['id']).to eq(comment.id)
       end
     end
 
