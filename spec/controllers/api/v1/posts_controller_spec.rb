@@ -14,7 +14,9 @@ RSpec.describe Api::V1::PostsController, type: :controller do
       end
 
       it 'returns the first page of posts by default' do
-        expect(JSON.parse(response.body)['posts'].size).to eq(20)
+        # The default page size is 20, so we expect 20 posts to be returned
+        # but we subtract 1 because we don't want to include the pagination links
+        expect(JSON.parse(response.body).size - 1).to eq(20)
       end
     end
 
@@ -26,12 +28,12 @@ RSpec.describe Api::V1::PostsController, type: :controller do
       end
 
       it 'returns the requested page of posts' do
-        expect(JSON.parse(response.body)['posts'].size).to eq(10)
+        expect(JSON.parse(response.body).size - 1).to eq(10)
       end
 
       it 'returns posts in the correct order' do
         expected_order = Post.order(created_at: :asc).offset(10).limit(10).pluck(:id)
-        actual_order = JSON.parse(response.body)['posts'].map { |post| post['id'] }
+        actual_order = JSON.parse(response.body).flat_map(&:values).flatten.pluck('id').compact
         expect(actual_order).to eq(expected_order)
       end
     end
@@ -168,6 +170,39 @@ RSpec.describe Api::V1::PostsController, type: :controller do
         delete :destroy, params: { id: post.id }, format: :json
         expect(response).to have_http_status(:unauthorized)
       end
+    end
+  end
+
+  describe '#format_json' do
+    let!(:post1) { create(:post) }
+    let!(:comment1) { create(:comment, post: post1) }
+    let!(:post2) { create(:post) }
+    let!(:comment2) { create(:comment, post: post2) }
+
+    it 'should return a properly formatted JSON object with posts and comments' do
+      expected_result = [
+        { post: post1, comments: [comment1] },
+        { post: post2, comments: [comment2] },
+        { pagination_links:
+            {
+              links:
+                {
+                  first: api_v1_posts_url(page: 1),
+                  previous: api_v1_posts_url,
+                  current: api_v1_posts_url(page: 1),
+                  next: api_v1_posts_url,
+                  last: api_v1_posts_url(page: 1)
+                },
+              first_page: 1,
+              previous_page: nil,
+              current_page: 1,
+              next_page: nil,
+              last_page: 1,
+              total_pages: 1
+            } }
+      ]
+      posts = Post.paginate(page: 1, per_page: 10)
+      expect(subject.send(:format_json, posts).map(&:deep_symbolize_keys)).to eq(expected_result)
     end
   end
 end

@@ -35,6 +35,22 @@ RSpec.describe Comment, type: :model do
     end
   end
 
+  describe '.by_post' do
+    let!(:post1) { create(:post) }
+    let!(:post2) { create(:post) }
+    let!(:comment1) { create(:comment, post: post1) }
+    let!(:comment2) { create(:comment, post: post2) }
+
+    it 'should return all comments if no post_id is provided' do
+      expect(Comment.by_post(nil)).to match_array([comment1, comment2])
+    end
+
+    it 'should return only comments for the specified post if a post_id is provided' do
+      expect(Comment.by_post(post1.id)).to match_array([comment1])
+      expect(Comment.by_post(post2.id)).to match_array([comment2])
+    end
+  end
+
   describe 'CRUD operations' do
     it 'can be created' do
       comment = Comment.new(valid_attributes)
@@ -48,14 +64,35 @@ RSpec.describe Comment, type: :model do
 
     it 'can be updated' do
       comment = Comment.create(valid_attributes)
-      comment.update(author: 'Jane Doe')
-      expect(Comment.find(comment.id).author).to eq('Jane Doe')
+      comment.update(author: 'Alex Fierro')
+      expect(Comment.find(comment.id).author).to eq('Alex Fierro')
     end
 
     it 'can be deleted' do
       comment = Comment.create(valid_attributes)
       comment.destroy
       expect(Comment.find_by(id: comment.id)).to be_nil
+    end
+  end
+
+  describe '#increment_comments_count' do
+    let(:post) { create(:post) }
+
+    it 'should increment the comments_count attribute on the associated post' do
+      expect do
+        create(:comment, post:)
+      end.to change { post.reload.comments_count }.by(1)
+    end
+  end
+
+  describe '#decrement_comments_count' do
+    let(:post) { create(:post) }
+    let!(:comment) { create(:comment, post:) }
+
+    it 'should decrement the comments_count attribute on the associated post' do
+      expect do
+        comment.destroy
+      end.to change { post.reload.comments_count }.by(-1)
     end
   end
 end

@@ -7,16 +7,15 @@ module Api
       include PaginationLinksConcern
 
       def index
-        posts = Post.paginate(page: params[:page], per_page: params[:per_page])
-        render json: {
-          posts:,
-          pagination: pagination_links(posts)
-        }
+        posts = Post.includes(:comments).paginate(page: params[:page], per_page: params[:per_page])
+                    .order("#{params[:order_by]} #{params[:order_type]}")
+        data = posts.any? ? format_json(posts) : []
+        render json: data
       end
 
       def show
-        post = Post.find(params[:id])
-        render json: { post: }
+        post = Post.includes(:comments).find(params[:id])
+        render json: { post:, comments: post.comments }
       end
 
       def create
@@ -47,8 +46,13 @@ module Api
 
       private
 
+      def format_json(posts)
+        data = posts.map { |post| { post:, comments: post.comments } }
+        data.push({ pagination_links: pagination_links(posts) })
+      end
+
       def post_params
-        params.require(:post).permit(:author, :content)
+        params.require(:post).permit(:author, :content, comments_attributes: %i[id author content _destroy])
       end
     end
   end
