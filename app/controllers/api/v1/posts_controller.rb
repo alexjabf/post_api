@@ -7,22 +7,22 @@ module Api
       include PaginationLinksConcern
 
       def index
-        posts = Post.includes(:comments).paginate(page: params[:page], per_page: params[:per_page])
-                    .order("#{params[:order_by]} #{params[:order_type]}")
-        data = posts.any? ? format_json(posts) : []
-        render json: data
+        posts = Post.post_comments(params[:order_by], params[:order_type])
+                    .paginate(page: params[:page], per_page: params[:per_page])
+
+        render json: serializer.new(posts, links: pagination_links(posts))
       end
 
       def show
-        post = Post.includes(:comments).find(params[:id])
-        render json: { post:, comments: post.comments }
+        post = Post.post_comments.find(params[:id])
+        render json: serializer.new(post)
       end
 
       def create
         post = Post.new(post_params)
 
         if post.save
-          render json: post, status: :created
+          render json: serializer.new(post), status: :created
         else
           render json: post.errors, status: :unprocessable_entity
         end
@@ -32,7 +32,7 @@ module Api
         post = Post.find(params[:id])
 
         if post.update(post_params)
-          render json: post
+          render json: serializer.new(post)
         else
           render json: post.errors, status: :unprocessable_entity
         end
@@ -46,9 +46,8 @@ module Api
 
       private
 
-      def format_json(posts)
-        data = posts.map { |post| { post:, comments: post.comments } }
-        data.push({ pagination_links: pagination_links(posts) })
+      def serializer
+        PostSerializer
       end
 
       def post_params

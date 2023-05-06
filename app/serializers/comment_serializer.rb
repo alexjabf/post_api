@@ -12,10 +12,16 @@
 #  updated_at        :datetime         not null
 #  parent_comment_id :integer
 #
-FactoryBot.define do
-  factory :comment do
-    author { Faker::Name.name }
-    content { Faker::Lorem.paragraph(sentence_count: 2) }
-    post
-  end
+class CommentSerializer
+  include JSONAPI::Serializer
+
+  set_type :comments
+  attributes :id, :post_id, :author, :content, :created_at, :updated_at
+
+  has_many :replies
+  has_one :post, serializer: PostSerializer
+
+  attribute :post, :replies
+
+  cache_options store: Rails.cache, namespace: 'jsonapi-serializer', expires_in: 1.hour
 end

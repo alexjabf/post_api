@@ -9,11 +9,19 @@
 #   Character.create(name: "Luke", movie: movies.first)
 
 100.times do |_n|
-  Post.create(
-    author: Faker::Name.name,
-    content: Faker::Lorem.paragraph(sentence_count: 10),
-    comments_attributes: [
-      rand(1..10).times.map { { author: Faker::Name.name, content: Faker::Lorem.paragraph(sentence_count: 10) } }
-    ].flatten
-  )
+  post = Post.create(author: Faker::Name.name, content: Faker::Lorem.paragraph(sentence_count: 10))
+  rand(1..10).times.map do
+    Comment.create(
+      author: Faker::Name.name, content: Faker::Lorem.paragraph(sentence_count: 10), post:,
+      replies_attributes: [
+        rand(0..5).times.map do
+          {
+            post:,
+            author: Faker::Name.name,
+            content: Faker::Lorem.paragraph(sentence_count: 5)
+          }
+        end
+      ].flatten
+    )
+  end
 end
