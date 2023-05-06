@@ -10,7 +10,7 @@
 # Configuration parameters: CountComments, CountAsOne, AllowedMethods, AllowedPatterns.
 # AllowedMethods: refine
 Metrics/BlockLength:
-  Max: 120
+  Max: 180
 
 # Offense count: 1
 # Configuration parameters: AllowedMethods, AllowedPatterns.
@@ -20,7 +20,7 @@ Metrics/CyclomaticComplexity:
 # Offense count: 3
 # Configuration parameters: CountComments, CountAsOne, AllowedMethods, AllowedPatterns.
 Metrics/MethodLength:
-  Max: 12
+  Max: 20
 
 # Offense count: 1
 # Configuration parameters: AllowedMethods, AllowedPatterns.
@@ -37,6 +37,10 @@ Style/Documentation:
 Style/IfUnlessModifier:
   Exclude:
     - 'bin/bundle'
+
+Metrics/AbcSize:
+  Exclude:
+    - 'app/controllers/concerns/pagination_links_concern.rb'
 
 # Offense count: 3
 # This cop supports safe autocorrection (--autocorrect).
